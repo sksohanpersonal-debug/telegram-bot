@@ -10,13 +10,13 @@ BASE_URL = "http://api.ucbot.store"
 async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         text = update.message.text.strip()
-        if not text.startswith("/"):
-            return  # ignore non-command messages
+        if not text.startswith("/r"):
+            return  # ignore non /r commands
 
-        parts = text[1:].split(maxsplit=1)  # remove "/" and split
+        parts = text[2:].split(maxsplit=1)  # remove /r and split
         if len(parts) < 2:
             await update.message.reply_text(
-                "Usage:\n/UID UC_CODE\nExample:\n/2025409039 BDMB-T-S-01760557 1973-7177-2357-5122"
+                "Usage:\n/rUID UC_CODE\nExample:\n/r2025409039 BDMB-T-S-01760557 1973-7177-2357-5122"
             )
             return
 
@@ -29,7 +29,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
 
         payload = {
-            "orderid": str(uuid.uuid4()),
+            "orderid": str(uuid.uuid4()),  # unique order id
             "playerid": playerid,
             "code": code
         }
@@ -56,7 +56,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-# MessageHandler দিয়ে সব "/" command handle হবে
-app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^/'), topup))
+# MessageHandler দিয়ে সব /r commands handle হবে
+app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^/r'), topup))
 
 app.run_polling()
