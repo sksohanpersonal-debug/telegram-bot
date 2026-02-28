@@ -3,15 +3,17 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 import uuid
 
-BOT_TOKEN = "8784425124:AAHPhkwkd2XpS0-O3CjdU52_vfEOU-od6k0"        
-API_TOKEN = "ca968e2c-60fc-4855-85d9-a7eab46ec4fd"       
+BOT_TOKEN = "8784425124:AAHPhkwkd2XpS0-O3CjdU52_vfEOU-od6k0"
+API_TOKEN = "ca968e2c-60fc-4855-85d9-a7eab46ec4fd"
 BASE_URL = "http://api.ucbot.store"
 
 async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         text = update.message.text.strip()
-        parts = text.split(maxsplit=1)  # প্রথম অংশ UID, বাকি UC code
+        if not text.startswith("/"):
+            return  # ignore non-command messages
 
+        parts = text[1:].split(maxsplit=1)  # remove "/" and split
         if len(parts) < 2:
             await update.message.reply_text(
                 "Usage:\n/UID UC_CODE\nExample:\n/2025409039 BDMB-T-S-01760557 1973-7177-2357-5122"
@@ -19,7 +21,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         playerid = parts[0]
-        code = parts[1]  # বাকি সব space included
+        code = parts[1]  # rest of the text (space included)
 
         headers = {
             "Authorization": API_TOKEN,
@@ -27,20 +29,14 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
 
         payload = {
-            "orderid": str(uuid.uuid4()),  # unique order id
+            "orderid": str(uuid.uuid4()),
             "playerid": playerid,
             "code": code
         }
 
-        response = requests.post(
-            f"{BASE_URL}/topup-sync",
-            json=payload,
-            headers=headers
-        )
-
+        response = requests.post(f"{BASE_URL}/topup-sync", json=payload, headers=headers)
         data = response.json()
 
-        # Telegram reply nicely format
         if "batch" in data:
             message = f"🎮 Username: {data.get('username', 'Unknown')}\n"
             message += f"✅ Success: {data.get('success',0)}\n"
@@ -60,7 +56,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-# MessageHandler দিয়ে সব text message handle করা হচ্ছে
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, topup))
+# MessageHandler দিয়ে সব "/" command handle হবে
+app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^/'), topup))
 
 app.run_polling()
