@@ -3,8 +3,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 import uuid
 
-BOT_TOKEN = "8784425124:AAHPhkwkd2XpS0-O3CjdU52_vfEOU-od6k0"
-API_TOKEN = "ca968e2c-60fc-4855-85d9-a7eab46ec4fd"
+BOT_TOKEN = "8784425124:AAHPhkwkd2XpS0-O3CjdU52_vfEOU-od6k0"      # <-- Telegram Bot Token
+API_TOKEN = "ca968e2c-60fc-4855-85d9-a7eab46ec4fd"     # <-- ucbot.store API Token
 BASE_URL = "http://api.ucbot.store"
 
 async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -21,7 +21,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         playerid = parts[0]
-        code = parts[1]  # rest of the text (space included)
+        code = parts[1]
 
         headers = {
             "Authorization": API_TOKEN,
@@ -29,7 +29,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
 
         payload = {
-            "orderid": str(uuid.uuid4()),  # unique order id
+            "orderid": str(uuid.uuid4()),
             "playerid": playerid,
             "code": code
         }
