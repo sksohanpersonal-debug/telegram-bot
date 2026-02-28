@@ -1,24 +1,25 @@
 import requests
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import uuid  # Unique orderid
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
+import uuid
 
-BOT_TOKEN = "8784425124:AAHPhkwkd2XpS0-O3CjdU52_vfEOU-od6k0"      
-API_TOKEN = "ca968e2c-60fc-4855-85d9-a7eab46ec4fd"        
+BOT_TOKEN = "8784425124:AAHPhkwkd2XpS0-O3CjdU52_vfEOU-od6k0"        
+API_TOKEN = "ca968e2c-60fc-4855-85d9-a7eab46ec4fd"       
 BASE_URL = "http://api.ucbot.store"
 
-# এখানে command নাম empty string ব্যবহার করা হবে যাতে "/UID ..." format কাজ করে
 async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        if len(context.args) < 2:
-            await update.message.reply_text("Usage:\n/UID UC_CODE\nExample:\n/2025409039 BDMB-T-S-01760557 1973-7177-2357-5122")
+        text = update.message.text.strip()
+        parts = text.split(maxsplit=1)  # প্রথম অংশ UID, বাকি UC code
+
+        if len(parts) < 2:
+            await update.message.reply_text(
+                "Usage:\n/UID UC_CODE\nExample:\n/2025409039 BDMB-T-S-01760557 1973-7177-2357-5122"
+            )
             return
 
-        # প্রথম অংশ UID
-        playerid = context.args[0]
-
-        # বাকি অংশ join করে এক UC code হিসেবে পাঠানো হবে
-        code = " ".join(context.args[1:])
+        playerid = parts[0]
+        code = parts[1]  # বাকি সব space included
 
         headers = {
             "Authorization": API_TOKEN,
@@ -39,7 +40,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         data = response.json()
 
-        # Telegram reply nicely format করা
+        # Telegram reply nicely format
         if "batch" in data:
             message = f"🎮 Username: {data.get('username', 'Unknown')}\n"
             message += f"✅ Success: {data.get('success',0)}\n"
@@ -59,7 +60,7 @@ async def topup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-# Command নাম empty string দেওয়া হচ্ছে যাতে "/UID ..." format কাজ করে
-app.add_handler(CommandHandler("", topup))
+# MessageHandler দিয়ে সব text message handle করা হচ্ছে
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, topup))
 
 app.run_polling()
